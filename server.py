@@ -70,6 +70,57 @@ def format_knowledge(contracts_data):
 # Pre-generate context once at startup
 formatted_context = format_knowledge(contracts)
 
+def clean_text_formatting(text):
+    """Remove all markdown and special formatting from text"""
+    import re
+    
+    # First, handle all possible escape sequences
+    text = text.replace('\\n\\n', '\n\n')  # Double escaped newlines
+    text = text.replace('\\n', '\n')       # Single escaped newlines
+    text = text.replace('\\t', ' ')        # Escaped tabs
+    text = text.replace('\\r', '')         # Escaped carriage returns
+    
+    # Remove markdown bold (**text** and __text__)
+    text = re.sub(r'\*\*(.*?)\*\*', r'\1', text)
+    text = re.sub(r'__(.*?)__', r'\1', text)
+    
+    # Remove markdown italic (*text* and _text_)
+    text = re.sub(r'\*(.*?)\*', r'\1', text)
+    text = re.sub(r'_(.*?)_', r'\1', text)
+    
+    # Remove code blocks (```text```)
+    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
+    
+    # Remove inline code (`text`)
+    text = re.sub(r'`(.*?)`', r'\1', text)
+    
+    # Remove extra quotes
+    text = re.sub(r'"([^"]*)"', r'\1', text)
+    text = re.sub(r"'([^']*)'", r'\1', text)
+    
+    # Remove escaped formatting characters
+    text = re.sub(r'\\([*_`"\'])', r'\1', text)
+    
+    # Handle numbered lists more aggressively - catch all variations
+    # \n\n1. -> \n\n1. (keep as is)
+    # \n\n1 -> \n\n1. 
+    # \n\n1: -> \n\n1. 
+    text = re.sub(r'\n\n(\d+)[:\s]*', r'\n\n\1. ', text)
+    
+    # Clean up multiple consecutive newlines
+    text = re.sub(r'\n{3,}', '\n\n', text)          # 3+ newlines to 2
+    text = re.sub(r'\n\s+\n', '\n\n', text)         # Newlines with spaces between
+    text = re.sub(r'[ \t]{2,}', ' ', text)          # Multiple spaces/tabs to single
+    
+    # Clean up formatting artifacts around punctuation
+    text = re.sub(r'\s+([.,:;!?])', r'\1', text)    # Remove spaces before punctuation
+    text = re.sub(r'([.,:;!?])\s{2,}', r'\1 ', text) # Multiple spaces after punctuation to single
+    
+    # Final cleanup
+    text = text.strip()
+    
+    return text
+
 # HTML template for the web interface with both services
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -335,11 +386,14 @@ def analyze_pdf():
         # Run the analysis
         result = agent.run(task)
         
+        # Clean up the summary text formatting
+        cleaned_summary = clean_text_formatting(result["summary"])
+        
         # Return JSON formatted response
         response = {
             "status": "success",
             "ipfs_hash": ipfs_hash,
-            "summary": result["summary"],
+            "summary": cleaned_summary,
             "score": result["score"],
             "timestamp": __import__('datetime').datetime.now().isoformat(),
             "message": f"PDF analysis completed successfully. Genuineness score: {result['score']}/10"
@@ -398,7 +452,16 @@ Below is the complete knowledge base of the system contracts:
 
 {formatted_context}
 
-Now, answer the following user query with accurate, simple, and clear instructions. 
+IMPORTANT FORMATTING RULES:
+- Use ONLY plain text in your response
+- Do NOT use any markdown formatting like **bold**, *italic*, or `code`
+- Do NOT use asterisks (*), quotes ("), backticks (`), or other special characters for formatting
+- Do NOT use numbered lists with special formatting
+- Use simple numbered lists like: 1. First item, 2. Second item
+- Use simple bullet points with dashes: - Item one, - Item two
+- Keep responses clean and readable without any markup
+
+Now, answer the following user query with accurate, simple, and clear instructions in plain text only.
 Be helpful and provide specific details from the knowledge base when relevant.
 If the user asks about functions, explain how to use them.
 If they ask about workflows, walk them through the steps.
@@ -415,11 +478,14 @@ User: {prompt}
             try:
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(full_prompt)
-                response_text = response.text.strip();
-                break;
+                response_text = response.text.strip()
+                
+                # Clean up formatting - remove markdown and special characters
+                response_text = clean_text_formatting(response_text)
+                break
             except Exception as e:
-                print(f"Model {model_name} failed: {e}");
-                continue;
+                print(f"Model {model_name} failed: {e}")
+                continue
 
         if response_text is None:
             return jsonify({
