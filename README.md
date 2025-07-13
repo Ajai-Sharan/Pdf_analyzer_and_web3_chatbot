@@ -135,10 +135,6 @@ python test_api.py
 python test_chatbot.py
 ```
 
-### Manual Testing
-1. **PDF Verification**: Use IPFS hash `QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE`
-2. **Chatbot**: Try queries like "How do I create a fundraiser?" or "Explain the lending pool system"
-
 ## 📋 Smart Contract Knowledge Base
 
 The chatbot provides expert assistance on:
@@ -269,13 +265,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [IPFS](https://ipfs.io/) for decentralized file storage
 - [Flask](https://flask.palletsprojects.com/) for the web framework
 - [PyPDF2](https://pypdf2.readthedocs.io/) for PDF processing
-
-## 📞 Support
-
-- 🐛 **Bug Reports**: [Open an issue](https://github.com/yourusername/ai-services-platform/issues)
-- 💡 **Feature Requests**: [Start a discussion](https://github.com/yourusername/ai-services-platform/discussions)
-- 📧 **Contact**: your.email@example.com
-
 ---
 
 <div align="center">
@@ -374,7 +363,6 @@ Content-Type: application/json
 ## 🧪 Testing
 
 Use these public PDF files for testing:
-- `QmYA2fn8cMbVWo4v95RwcwJVyQsNtnEwHerfWR8UNtEwoE` (Example document)
 - Any valid IPFS hash pointing to a PDF file
 
 ## 🔧 How It Works
@@ -408,8 +396,13 @@ pdf_verification_agent/
 ## 🔄 What's New
 
 ✅ **Dynamic IPFS hash input** - No more hardcoded hashes!
+
 ✅ **Localhost web server** - Easy-to-use web interface
+
 ✅ **JSON API responses** - Structured, parseable output
+
 ✅ **Real-time feedback** - Loading states and progress
+
 ✅ **Error handling** - Comprehensive error management
+
 ✅ **Multiple interfaces** - Web, API, and CLI options
